@@ -25,6 +25,16 @@ struct FsmTransition;
 using FsmName = std::string;
 using FsmSignal = std::string;
 
+//====================================================================================================================
+/// Exception raised by FSM
+/// \ingroup configuration
+class FsmException : public std::runtime_error
+{
+public:
+  explicit FsmException(const std::string& message = std::string(""));
+  virtual ~FsmException() noexcept;
+};
+
 //======================================================================================================================
 /// Represents a single state within an Fsm
 class FsmState

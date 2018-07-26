@@ -11,6 +11,16 @@
 
 namespace fsm
 {
+//=====================================================================================================================
+FsmException::FsmException(const std::string& message) : std::runtime_error(message)
+//=====================================================================================================================
+{
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+FsmException::~FsmException() noexcept = default;
+//---------------------------------------------------------------------------------------------------------------------
+
 //======================================================================================================================
 FsmState::FsmState(Fsm& fsm, FsmName name) : fsm_(fsm), name_(std::move(name))
 //======================================================================================================================
@@ -86,22 +96,23 @@ void Fsm::addTransitionRule(const FsmName& from_state, const FsmSignal& signal, 
   if (!stateExists(from_state))
   {
     std::stringstream str;
-    str << "[" << __FUNCTION__ << "] 'From' state \"" << from_state << "\" does not exit";  // NOLINT
-    throw std::runtime_error(str.str());
+    str << "[" << __FUNCTION__ << "] State \"" << from_state << "\" does not exit";  // NOLINT
+    throw FsmException(str.str());
   }
   if (!stateExists(to_state))
   {
     std::stringstream str;
-    str << "[" << __FUNCTION__ << "] 'To' state \"" << to_state << "\" does not exit";  // NOLINT
-    throw std::runtime_error(str.str());
+    str << "[" << __FUNCTION__ << "] State \"" << to_state << "\" does not exit";  // NOLINT
+    throw FsmException(str.str());
   }
   if (transitionRuleExists(from_state, signal))
   {
     std::stringstream str;
     str << "[" << __FUNCTION__ << "] Transition from \"" << from_state << "\" already exists for \""  // NOLINT
         << signal << "\"";
-    throw std::runtime_error(str.str());
+    throw FsmException(str.str());
   }
+  FsmTransition tr;
   transitions_.push_back({ from_state, to_state, signal });
 }
 
@@ -119,7 +130,7 @@ void Fsm::initialise(const FsmName& state)
   {
     std::stringstream str;
     str << "[" << __FUNCTION__ << "] State \"" << state << "\" does not exist";  // NOLINT
-    throw std::runtime_error(str.str());
+    throw FsmException(str.str());
   }
   current_state_ = *it;
   current_state_->onEntry();
@@ -133,7 +144,7 @@ const std::shared_ptr<FsmState>& Fsm::getCurrentState() const
   {
     std::stringstream str;
     str << "[" << __FUNCTION__ << "] FSM not initialised";  // NOLINT
-    throw std::runtime_error(str.str());
+    throw FsmException(str.str());
   }
   return current_state_;
 }
@@ -163,7 +174,7 @@ void Fsm::changeState(const FsmSignal& signal)
   {
     std::stringstream str;
     str << "[" << __FUNCTION__ << "] FSM not initialised";  // NOLINT
-    throw std::runtime_error(str.str());
+    throw FsmException(str.str());
   }
 
   // find a valid transition
