@@ -1,0 +1,46 @@
+language: cpp
+
+env:
+  global:
+    - DEPS_DIR=${TRAVIS_BUILD_DIR}/deps
+
+matrix:
+  include:
+    - os: linux
+      dist: trusty
+      sudo: true
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - sourceline: 'deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty main'
+              key_url: 'http://apt.llvm.org/llvm-snapshot.gpg.key'
+          packages:
+            - g++-7
+            - valgrind
+            - cmake-data
+            - cmake
+            - clang
+            - clang-format
+            - clang-tidy
+
+      env:
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+
+before_install:
+    - eval "${MATRIX_EVAL}"
+
+#install:
+
+script:
+    - mkdir -p ${TRAVIS_BUILD_DIR}/build
+    - cd ${TRAVIS_BUILD_DIR}/build
+    - cmake ..
+    - make -j8
+    - sudo make install
+
+#after_script:
+#     - export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
+#     - fms_tests
+

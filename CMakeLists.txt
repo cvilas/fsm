@@ -69,7 +69,10 @@ if (DOXYGEN_FOUND)
     set(DOXYGEN_IN ${PROJECT_SOURCE_DIR}/docs/doxyfile.in)
     set(DOXYGEN_OUT ${CMAKE_BINARY_DIR}/doxyfile)
     file(GLOB_RECURSE DOC_FILES
-        ${PROJECT_SOURCE_DIR}/todo.md ${PROJECT_SOURCE_DIR}/README.md ${PROJECT_SOURCE_DIR}/LICENSE.md)
+        ${PROJECT_SOURCE_DIR}/.travis.yml
+        ${PROJECT_SOURCE_DIR}/todo.md
+        ${PROJECT_SOURCE_DIR}/README.md
+        ${PROJECT_SOURCE_DIR}/LICENSE.md)
 
     # request to configure the file
     configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
