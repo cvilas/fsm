@@ -77,10 +77,7 @@ public:
   }
   void onEntry() final
   {
-    std::cout << "[" << getName() << "::onEntry] entered\n";
-    std::this_thread::sleep_for(std::chrono::seconds(2));
-    getFsm().raise("off");
-    std::cout << "[" << getName() << "::onEntry] exited\n";
+    std::cout << "[" << getName() << "::onEntry]\n";
   }
   void onExit() final
   {

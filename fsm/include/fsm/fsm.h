@@ -77,11 +77,27 @@ public:
 public:
   Fsm();
   ~Fsm();
+
+  /// Add a state in the machine. Also see Fsm::addTransitionRule().
   void addState(std::shared_ptr<FsmState> state);
+
+  /// Define state transition rule. The corresponding states must already exist See Fsm::addState().
+  /// \param from_state The name of state to transition from
+  /// \param signal The signal that causes the state transition
+  /// \param to_state The name of state to transition to.
   void addTransitionRule(const FsmName& from_state, const FsmSignal& signal, const FsmName& to_state);
+
+  /// Set the initial state and start the state machine
   void initialise(const FsmName& state);
+
+  /// Raise a signal. This will kick of a state transition if one is defined for this signal and current state.
+  /// The signal is quietly ignored otherwise.
   void raise(const FsmSignal& signal);
+
+  /// \return true if we are busy processing state transitions.
   bool isStateTransitionPending() const;
+
+  /// \return A pointer to current state. Use this do perform operations on this state.
   const std::shared_ptr<FsmState>& getCurrentState() const;
 
 private:
