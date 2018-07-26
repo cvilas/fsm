@@ -1,3 +1,11 @@
+//=====================================================================================================================
+// Copyright (C) 2018 Vilas Kumar Chitrakaran
+//
+// This file is part of project fsm (https://github.com/cvilas/fsm)
+//
+// Licensed under the MIT License. See LICENSE.md
+//=====================================================================================================================
+
 #include "fsm/fsm.h"
 
 #include <csignal>
@@ -7,10 +15,7 @@
 class IdleState : public fsm::FsmState
 {
 public:
-  IdleState(fsm::Fsm& fsm) : fsm::FsmState(fsm, "idle")
-  {
-  }
-  ~IdleState()
+  explicit IdleState(fsm::Fsm& fsm) : fsm::FsmState(fsm, "idle")
   {
   }
   void onEntry() final
@@ -27,13 +32,10 @@ public:
 class PowerUpState : public fsm::FsmState
 {
 public:
-  PowerUpState(fsm::Fsm& ctx) : fsm::FsmState(ctx, "power_up")
+  explicit PowerUpState(fsm::Fsm& ctx) : fsm::FsmState(ctx, "power_up")
   {
   }
-  ~PowerUpState()
-  {
-  }
-  virtual void onEntry()
+  void onEntry() final
   {
     std::cout << "[" << getName() << "::onEntry] entered\n";
     std::this_thread::sleep_for(std::chrono::seconds(2));
@@ -50,13 +52,10 @@ public:
 class PowerDownState : public fsm::FsmState
 {
 public:
-  PowerDownState(fsm::Fsm& ctx) : fsm::FsmState(ctx, "power_down")
+  explicit PowerDownState(fsm::Fsm& ctx) : fsm::FsmState(ctx, "power_down")
   {
   }
-  ~PowerDownState()
-  {
-  }
-  virtual void onEntry()
+  void onEntry() final
   {
     std::cout << "[" << getName() << "::onEntry] entered\n";
     std::this_thread::sleep_for(std::chrono::seconds(2));
@@ -73,13 +72,10 @@ public:
 class SpeedControlState : public fsm::FsmState
 {
 public:
-  SpeedControlState(fsm::Fsm& ctx) : FsmState(ctx, "speed_control")
+  explicit SpeedControlState(fsm::Fsm& ctx) : FsmState(ctx, "speed_control")
   {
   }
-  ~SpeedControlState()
-  {
-  }
-  virtual void onEntry()
+  void onEntry() final
   {
     std::cout << "[" << getName() << "::onEntry] entered\n";
     std::this_thread::sleep_for(std::chrono::seconds(2));
@@ -131,7 +127,7 @@ public:
     std::cout << "State \"idle\" reached\n" << std::flush;
   }
 
-  void trigger(fsm::FsmSignal signal)
+  void trigger(const fsm::FsmSignal& signal)
   {
     controller_fsm_.raise(signal);
   }
@@ -140,6 +136,11 @@ public:
   {
     return controller_fsm_.getCurrentState()->getName();
   }
+
+  MotorController(const MotorController&) = delete;
+  MotorController(const MotorController&&) = delete;
+  MotorController& operator=(const MotorController&) = delete;
+  MotorController& operator=(const MotorController&&) = delete;
 
 private:
   fsm::Fsm controller_fsm_;
@@ -159,6 +160,9 @@ static void onSignal(int signum)
 int main(int argc, char** argv)
 //=====================================================================================================================
 {
+  (void)argc;
+  (void)argv;
+
   signal(SIGINT, &onSignal);
 
   try

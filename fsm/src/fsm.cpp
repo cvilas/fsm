@@ -12,10 +12,34 @@
 namespace fsm
 {
 //======================================================================================================================
+FsmState::FsmState(Fsm& fsm, FsmName name) : fsm_(fsm), name_(std::move(name))
+//======================================================================================================================
+{
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+FsmState::~FsmState() = default;
+//----------------------------------------------------------------------------------------------------------------------
+
+//----------------------------------------------------------------------------------------------------------------------
+FsmName FsmState::getName() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+  return name_;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+Fsm& FsmState::getFsm()
+//----------------------------------------------------------------------------------------------------------------------
+{
+  return fsm_;
+}
+
+//======================================================================================================================
 Fsm::Fsm() : exit_flag_(false)
 //======================================================================================================================
 {
-  signal_handler_ = std::async(std::launch::async, [this]() { this->signalHandler(); });
+  transition_handler_ = std::async(std::launch::async, [this]() { this->transitionHandler(); });
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -24,9 +48,9 @@ Fsm::~Fsm()
 {
   exit_flag_ = true;
   signal_condition_.notify_all();
-  if (signal_handler_.valid())
+  if (transition_handler_.valid())
   {
-    signal_handler_.wait();
+    transition_handler_.wait();
   }
 }
 
@@ -38,7 +62,7 @@ void Fsm::addState(std::shared_ptr<FsmState> state)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-bool Fsm::stateExists(const std::string& name)
+bool Fsm::stateExists(const FsmName& name)
 //----------------------------------------------------------------------------------------------------------------------
 {
   return states_.end() != std::find_if(states_.begin(), states_.end(),
@@ -46,7 +70,7 @@ bool Fsm::stateExists(const std::string& name)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-bool Fsm::transitionExists(const std::string& state_name, const FsmSignal& signal)
+bool Fsm::transitionRuleExists(const FsmName& state_name, const FsmSignal& signal)
 //----------------------------------------------------------------------------------------------------------------------
 {
   return transitions_.end() !=
@@ -56,7 +80,7 @@ bool Fsm::transitionExists(const std::string& state_name, const FsmSignal& signa
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void Fsm::addTransitionRule(const std::string& from_state, const FsmSignal& signal, const std::string& to_state)
+void Fsm::addTransitionRule(const FsmName& from_state, const FsmSignal& signal, const FsmName& to_state)
 //----------------------------------------------------------------------------------------------------------------------
 {
   if (!stateExists(from_state))
@@ -71,7 +95,7 @@ void Fsm::addTransitionRule(const std::string& from_state, const FsmSignal& sign
     str << "[" << __FUNCTION__ << "] 'To' state \"" << to_state << "\" does not exit";  // NOLINT
     throw std::runtime_error(str.str());
   }
-  if (transitionExists(from_state, signal))
+  if (transitionRuleExists(from_state, signal))
   {
     std::stringstream str;
     str << "[" << __FUNCTION__ << "] Transition from \"" << from_state << "\" already exists for \""  // NOLINT
@@ -82,7 +106,7 @@ void Fsm::addTransitionRule(const std::string& from_state, const FsmSignal& sign
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void Fsm::initialise(const std::string& state)
+void Fsm::initialise(const FsmName& state)
 //----------------------------------------------------------------------------------------------------------------------
 {
   if (current_state_ != nullptr)
@@ -115,7 +139,7 @@ const std::shared_ptr<FsmState>& Fsm::getCurrentState() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void Fsm::raise(const std::string& signal)
+void Fsm::raise(const FsmSignal& signal)
 //----------------------------------------------------------------------------------------------------------------------
 {
   std::lock_guard<std::mutex> lk(signal_guard_);
@@ -156,7 +180,7 @@ void Fsm::changeState(const FsmSignal& signal)
 
   // find next state
   auto next_state_it = std::find_if(states_.begin(), states_.end(), [it](const std::shared_ptr<FsmState>& state) {
-    return state->getName() == (*it).new_state;
+    return state->getName() == (*it).next_state;
   });
 
   // exit current state and bring up new state
@@ -166,7 +190,7 @@ void Fsm::changeState(const FsmSignal& signal)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void Fsm::signalHandler()
+void Fsm::transitionHandler()
 //----------------------------------------------------------------------------------------------------------------------
 {
   while (true)
