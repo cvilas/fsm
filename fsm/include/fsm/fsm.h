@@ -15,6 +15,7 @@
 #include <memory>
 #include <mutex>
 #include <queue>
+#include <string>
 
 namespace fsm
 {
@@ -28,8 +29,10 @@ using FsmSignal = std::string;
 /// Exception raised by FSM
 class FsmException : public std::runtime_error
 {
+  static constexpr char DEFAULT_MESSAGE[] = "Fsm error";
+
 public:
-  explicit FsmException(const std::string& message = "");
+  explicit FsmException(const std::string& message = DEFAULT_MESSAGE);
 };
 
 //======================================================================================================================

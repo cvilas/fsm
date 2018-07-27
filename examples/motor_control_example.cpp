@@ -108,20 +108,27 @@ public:
 
   ~MotorController()
   {
-    std::cout << "State while exiting: " << getCurrentState() << "\n" << std::flush;
-    controller_fsm_.raise("off");
-    std::cout << "Waiting for pending triggers to flush..\n" << std::flush;
-    while (controller_fsm_.isStateTransitionPending())
+    try
     {
-      std::this_thread::sleep_for(std::chrono::seconds(1));
+      std::cout << "State while exiting: " << getCurrentState() << "\n" << std::flush;
+      controller_fsm_.raise("off");
+      std::cout << "Waiting for pending triggers to flush..\n" << std::flush;
+      while (controller_fsm_.isStateTransitionPending())
+      {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+      }
+      std::cout << "No pending triggers\n" << std::flush;
+      std::cout << "Waiting for \"idle\" state..\n" << std::flush;
+      while (getCurrentState() != "idle")
+      {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+      }
+      std::cout << "State \"idle\" reached\n" << std::flush;
     }
-    std::cout << "No pending triggers\n" << std::flush;
-    std::cout << "Waiting for \"idle\" state..\n" << std::flush;
-    while (getCurrentState() != "idle")
+    catch (const std::exception& ex)
     {
-      std::this_thread::sleep_for(std::chrono::seconds(1));
+      std::cerr << "[" << __FUNCTION__ << "] " << ex.what();
     }
-    std::cout << "State \"idle\" reached\n" << std::flush;
   }
 
   void trigger(const fsm::FsmSignal& signal)

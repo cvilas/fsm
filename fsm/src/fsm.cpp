@@ -18,6 +18,8 @@ FsmException::FsmException(const std::string& message) : std::runtime_error(mess
 {
 }
 
+constexpr char FsmException::DEFAULT_MESSAGE[];
+
 //======================================================================================================================
 FsmState::FsmState(Fsm& fsm, FsmName name) : fsm_(fsm), name_(std::move(name))
 //======================================================================================================================
