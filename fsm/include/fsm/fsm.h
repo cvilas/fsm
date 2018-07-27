@@ -9,13 +9,12 @@
 #ifndef FSM_H
 #define FSM_H
 
-#include <algorithm>
 #include <condition_variable>
-#include <deque>
 #include <future>
+#include <map>
 #include <memory>
 #include <mutex>
-#include <vector>
+#include <queue>
 
 namespace fsm
 {
@@ -27,12 +26,10 @@ using FsmSignal = std::string;
 
 //====================================================================================================================
 /// Exception raised by FSM
-/// \ingroup configuration
 class FsmException : public std::runtime_error
 {
 public:
-  explicit FsmException(const std::string& message = std::string(""));
-  virtual ~FsmException() noexcept;
+  explicit FsmException(const std::string& message = "");
 };
 
 //======================================================================================================================
@@ -62,7 +59,7 @@ protected:
 
 protected:
   Fsm& fsm_;
-  std::string name_;
+  FsmName name_;
 };
 
 //======================================================================================================================
@@ -111,20 +108,19 @@ public:
   const std::shared_ptr<FsmState>& getCurrentState() const;
 
 private:
-  bool stateExists(const FsmName& name);
   bool transitionRuleExists(const FsmName& state_name, const FsmSignal& signal);
   void transitionHandler();
   void changeState(const FsmSignal& signal);
 
 private:
-  std::vector<std::shared_ptr<FsmState>> states_;
-  std::vector<FsmTransition> transitions_;
+  std::map<FsmName, std::shared_ptr<FsmState>> states_;
+  std::multimap<FsmName, FsmTransition> transitions_;
   std::shared_ptr<FsmState> current_state_;
 
   mutable std::mutex signal_guard_;
   bool exit_flag_;
   std::condition_variable signal_condition_;
-  std::deque<FsmSignal> signal_queue_;
+  std::queue<FsmSignal> signal_queue_;
   std::future<void> transition_handler_;
 };
 
