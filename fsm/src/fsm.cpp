@@ -74,15 +74,8 @@ void Fsm::addState(std::shared_ptr<FsmState> state)
 bool Fsm::transitionRuleExists(const FsmName& state_name, const FsmSignal& signal)
 //----------------------------------------------------------------------------------------------------------------------
 {
-  auto state_transitions = transitions_.equal_range(state_name);
-  for (auto it = state_transitions.first; it != state_transitions.second; ++it)
-  {
-    if (it->second.signal == signal)
-    {
-      return true;
-    }
-  }
-  return false;
+  auto tr = transitions_.equal_range(state_name);
+  return tr.second != std::find_if(tr.first, tr.second, [&signal](const auto& p) { return p.second.signal == signal; });
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -172,17 +165,16 @@ void Fsm::changeState(const FsmSignal& signal)
     throw FsmException(str.str());
   }
 
-  auto all_transitions = transitions_.equal_range(current_state_->getName());
-  for (auto it = all_transitions.first; it != all_transitions.second; ++it)
+  const auto all_transitions = transitions_.equal_range(current_state_->getName());
+  const auto it = std::find_if(all_transitions.first, all_transitions.second,
+                               [&signal](const auto& keyval) { return keyval.second.signal == signal; });
+
+  if (it != all_transitions.second)
   {
-    if (it->second.signal == signal)
-    {
-      // exit current state and bring up new state
-      current_state_->onExit();
-      current_state_ = states_.at(it->second.next_state);
-      current_state_->onEntry();
-      return;
-    }
+    // exit current state and bring up new state
+    current_state_->onExit();
+    current_state_ = states_.at(it->second.next_state);
+    current_state_->onEntry();
   }
 }
 
