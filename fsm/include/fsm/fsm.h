@@ -20,16 +20,12 @@
 namespace fsm
 {
 class Fsm;
-class FsmState;
-struct FsmTransition;
-using FsmName = std::string;
-using FsmSignal = std::string;
 
 //====================================================================================================================
 /// Exception raised by FSM
 class FsmException : public std::runtime_error
 {
-  static constexpr char DEFAULT_MESSAGE[] = "Fsm error";
+  static constexpr char DEFAULT_MESSAGE[] = "FSM error";
 
 public:
   explicit FsmException(const std::string& message = DEFAULT_MESSAGE);
@@ -37,13 +33,16 @@ public:
 
 //======================================================================================================================
 /// Represents a single state within an Fsm
-class FsmState
+class State
 {
 public:
-  virtual ~FsmState();
+  using Id = std::string;
+
+public:
+  virtual ~State();
 
   /// Get identifier
-  FsmName getName() const;
+  Id getId() const;
 
   /// Get reference to FSM to which this state belongs
   Fsm& getFsm();
@@ -58,11 +57,11 @@ public:
 
 protected:
   /// Only derived classes can be instantiated directly
-  FsmState(Fsm& fsm, FsmName name);
+  State(Fsm& fsm, Id id);
 
 protected:
   Fsm& fsm_;
-  FsmName name_;
+  Id id_;
 };
 
 //======================================================================================================================
@@ -72,59 +71,61 @@ protected:
 /// - Define and add states (see Fsm::addState)
 /// - Define and add state transition rules (see Fsm::addTransitionRule)
 /// - Initialise with a starting state (see Fsm::initialise)
-/// - Raise signals to change state (see Fsm::raise)
+/// - Raise event to change state (see Fsm::raise)
 class Fsm
 {
 public:
+  using Event = std::string;
+
   /// Defines an FSM transition from one state to another.
-  struct FsmTransition
+  struct Transition
   {
-    FsmName current_state;
-    FsmName next_state;
-    FsmSignal signal;
+    State::Id active_state;  //!< state active at the time of event
+    State::Id next_state;    //!< state to transition into next.
+    Event event;             //!< signal that triggers state transition
   };
 
 public:
   Fsm();
-  ~Fsm();
+  virtual ~Fsm();
 
   /// Add a state in the machine. Also see Fsm::addTransitionRule().
-  void addState(std::shared_ptr<FsmState> state);
+  void addState(std::shared_ptr<State> state);
 
   /// Define state transition rule. The corresponding states must already exist See Fsm::addState().
   /// \param from_state The name of state to transition from
-  /// \param signal The signal that causes the state transition
+  /// \param event The signal that causes the state transition
   /// \param to_state The name of state to transition to.
-  void addTransitionRule(const FsmName& from_state, const FsmSignal& signal, const FsmName& to_state);
+  void addTransitionRule(const State::Id& from_state, const Event& event, const State::Id& to_state);
 
   /// Set the initial state and start the state machine
-  void initialise(const FsmName& state);
+  void initialise(const State::Id& state);
 
-  /// Raise a signal. This will kick of a state transition if one is defined for this signal and current state.
-  /// The signal is quietly ignored otherwise.
-  void raise(const FsmSignal& signal);
+  /// Raise an event. This will kick of a state transition if one is defined for this event and current state.
+  /// The event is quietly ignored otherwise.
+  void raise(const Event& event);
 
-  /// \return true if we are busy processing state transitions.
-  bool isStateTransitionPending() const;
+  /// \return true if not all events have been processed yet.
+  bool hasPendingEvents() const;
 
   /// \return A pointer to current state. Use this do perform operations on this state.
-  const std::shared_ptr<FsmState>& getCurrentState() const;
+  const std::shared_ptr<State>& getActiveState() const;
 
 private:
-  bool transitionRuleExists(const FsmName& state_name, const FsmSignal& signal);
-  void transitionHandler();
-  void changeState(const FsmSignal& signal);
+  bool transitionRuleExists(const State::Id& state_name, const Event& event);
+  void eventHandler();
+  void changeState(const Event& event);
 
 private:
-  std::map<FsmName, std::shared_ptr<FsmState>> states_;
-  std::multimap<FsmName, FsmTransition> transitions_;
-  std::shared_ptr<FsmState> current_state_;
+  std::map<State::Id, std::shared_ptr<State>> states_;
+  std::multimap<State::Id, Transition> transitions_;
+  std::shared_ptr<State> active_state_;
 
-  mutable std::mutex signal_guard_;
+  mutable std::mutex event_guard_;
   bool exit_flag_;
-  std::condition_variable signal_condition_;
-  std::queue<FsmSignal> signal_queue_;
-  std::future<void> transition_handler_;
+  std::condition_variable event_condition_;
+  std::queue<Event> event_queue_;
+  std::future<void> event_handler_;
 };
 
 }  // namespace fsm

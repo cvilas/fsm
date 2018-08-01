@@ -10,7 +10,7 @@
 
 //=====================================================================================================================
 /// do nothing state
-class IdleState : public fsm::FsmState
+class IdleState : public fsm::State
 {
 public:
   explicit IdleState(fsm::Fsm& fsm);
@@ -20,7 +20,7 @@ public:
 
 //=====================================================================================================================
 /// powering up
-class PowerUpState : public fsm::FsmState
+class PowerUpState : public fsm::State
 {
 public:
   explicit PowerUpState(fsm::Fsm& ctx);
@@ -30,7 +30,7 @@ public:
 
 //=====================================================================================================================
 /// powering down
-class PowerDownState : public fsm::FsmState
+class PowerDownState : public fsm::State
 {
 public:
   explicit PowerDownState(fsm::Fsm& ctx);
@@ -40,7 +40,7 @@ public:
 
 //=====================================================================================================================
 /// maintain speed
-class SpeedControlState : public fsm::FsmState
+class SpeedControlState : public fsm::State
 {
 public:
   explicit SpeedControlState(fsm::Fsm& ctx);
@@ -55,8 +55,8 @@ class MotorController
 public:
   MotorController();
   ~MotorController();
-  void trigger(const fsm::FsmSignal& signal);
-  fsm::FsmName getCurrentState() const;
+  void trigger(const fsm::Fsm::Event& signal);
+  fsm::State::Id getActiveState() const;
 
   MotorController(const MotorController&) = delete;
   MotorController(const MotorController&&) = delete;
