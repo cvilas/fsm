@@ -90,7 +90,7 @@ void Fsm::addTransitionRule(const State::Id& from_state, const Event& event, con
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void Fsm::addTransitionRule(const State::Id& from_state, const Event& event, TransitionFunc&& f)
+void Fsm::addTransitionRule(const State::Id& from_state, const Event& event, TransitionFunc&& func)
 //----------------------------------------------------------------------------------------------------------------------
 {
   if (states_.find(from_state) == states_.end())
@@ -114,7 +114,7 @@ void Fsm::addTransitionRule(const State::Id& from_state, const Event& event, Tra
     throw FsmException(str.str());
   }
   transitions_.emplace(
-      std::make_pair(State::Id(from_state), Transition{ from_state, event, std::forward<TransitionFunc>(f) }));
+      std::make_pair(State::Id(from_state), Transition{ from_state, event, std::forward<TransitionFunc>(func) }));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

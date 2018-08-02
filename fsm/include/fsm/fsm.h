@@ -88,8 +88,13 @@ public:
   /// \param to_state The name of state to transition to.
   void addTransitionRule(const State::Id& from_state, const Event& event, const State::Id& to_state);
 
+  /// Define state transition rule as a conditional function. Allows implementation of conditional state
+  /// transitions or user-defined processing steps in response to a signal when in a particular state.
+  /// \param from_state The name of state to transition from
+  /// \param event The signal that causes the state transition
+  /// \param func Function returns ID of resulting state.
   using TransitionFunc = std::function<State::Id()>;
-  void addTransitionRule(const State::Id& from_state, const Event& event, TransitionFunc&& f);
+  void addTransitionRule(const State::Id& from_state, const Event& event, TransitionFunc&& func);
 
   /// Set the initial state and start the state machine
   void initialise(const State::Id& state);
