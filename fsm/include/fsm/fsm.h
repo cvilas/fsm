@@ -75,14 +75,6 @@ class Fsm
 public:
   using Event = std::string;
 
-  /// Defines an FSM transition from one state to another.
-  struct Transition
-  {
-    State::Id active_state;  //!< state active at the time of event
-    State::Id next_state;    //!< state to transition into next.
-    Event event;             //!< signal that triggers state transition
-  };
-
 public:
   Fsm();
   virtual ~Fsm();
@@ -95,6 +87,9 @@ public:
   /// \param event The signal that causes the state transition
   /// \param to_state The name of state to transition to.
   void addTransitionRule(const State::Id& from_state, const Event& event, const State::Id& to_state);
+
+  using TransitionFunc = std::function<State::Id()>;
+  void addTransitionRule(const State::Id& from_state, const Event& event, TransitionFunc&& f);
 
   /// Set the initial state and start the state machine
   void initialise(const State::Id& state);
@@ -113,6 +108,15 @@ private:
   bool transitionRuleExists(const State::Id& state_name, const Event& event);
   void eventHandler();
   void changeState(const Event& event);
+
+private:
+  /// Defines an FSM transition from one state to another.
+  struct Transition
+  {
+    State::Id from_state;  //!< state active at the time of event
+    Event event;           //!< signal that triggers state transition
+    TransitionFunc f;      //!< Functional that returns state to transition into next
+  };
 
 private:
   std::map<State::Id, std::shared_ptr<State>> states_;

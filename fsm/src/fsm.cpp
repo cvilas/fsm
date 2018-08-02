@@ -80,18 +80,32 @@ bool Fsm::transitionRuleExists(const State::Id& state_name, const Event& event)
 void Fsm::addTransitionRule(const State::Id& from_state, const Event& event, const State::Id& to_state)
 //----------------------------------------------------------------------------------------------------------------------
 {
-  if (states_.find(from_state) == states_.end())
-  {
-    std::stringstream str;
-    str << "[" << __FUNCTION__ << "] State \"" << from_state << "\" does not exit";  // NOLINT
-    throw FsmException(str.str());
-  }
   if (states_.find(to_state) == states_.end())
   {
     std::stringstream str;
     str << "[" << __FUNCTION__ << "] State \"" << to_state << "\" does not exit";  // NOLINT
     throw FsmException(str.str());
   }
+  addTransitionRule(from_state, event, [to_state]() -> State::Id { return to_state; });
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void Fsm::addTransitionRule(const State::Id& from_state, const Event& event, TransitionFunc&& f)
+//----------------------------------------------------------------------------------------------------------------------
+{
+  if (states_.find(from_state) == states_.end())
+  {
+    std::stringstream str;
+    str << "[" << __FUNCTION__ << "] State \"" << from_state << "\" does not exit";  // NOLINT
+    throw FsmException(str.str());
+  }
+  /*
+  if (states_.find(to_state) == states_.end())
+  {
+    std::stringstream str;
+    str << "[" << __FUNCTION__ << "] State \"" << to_state << "\" does not exit";  // NOLINT
+    throw FsmException(str.str());
+  }*/
   if (transitionRuleExists(from_state, event))
   {
     std::stringstream str;
@@ -99,8 +113,8 @@ void Fsm::addTransitionRule(const State::Id& from_state, const Event& event, con
         << event << "\"";
     throw FsmException(str.str());
   }
-  Transition tr;
-  transitions_.emplace(std::make_pair(State::Id(from_state), Transition{ from_state, to_state, event }));
+  transitions_.emplace(
+      std::make_pair(State::Id(from_state), Transition{ from_state, event, std::forward<TransitionFunc>(f) }));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -171,7 +185,7 @@ void Fsm::changeState(const Event& event)
   {
     // exit current state and bring up new state
     active_state_->onExit();
-    active_state_ = states_.at(it->second.next_state);
+    active_state_ = states_.at(it->second.f());  /// \todo catch non-existent output state
     active_state_->onEntry();
   }
 }
