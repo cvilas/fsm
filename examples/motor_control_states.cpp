@@ -110,7 +110,7 @@ MotorController::MotorController()
   controller_fsm_.addTransitionRule("power_down", "on", "power_up");
   controller_fsm_.addTransitionRule("power_down", "has_shutdown", "idle");
 
-  controller_fsm_.initialise("idle");
+  controller_fsm_.start("idle");
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -119,6 +119,10 @@ MotorController::~MotorController()
 {
   try
   {
+    if (!controller_fsm_.isRunning())
+    {
+      return;
+    }
     controller_fsm_.raise("off");
     std::cout << "Waiting for \"idle\" state..\n" << std::flush;
     while (getActiveState() != "idle")

@@ -97,7 +97,7 @@ public:
   void addTransitionRule(const State::Id& from_state, const Event& event, TransitionFunc&& func);
 
   /// Set the initial state and start the state machine
-  void initialise(const State::Id& state);
+  void start(const State::Id& state);
 
   /// Raise an event. This will kick of a state transition if one is defined for this event and current state.
   /// The event is quietly ignored otherwise.
@@ -109,7 +109,11 @@ public:
   /// \return A pointer to current state. Use this do perform operations on this state.
   const std::shared_ptr<State>& getActiveState() const;
 
+  /// \return true if the FSM is running
+  bool isRunning() const;
+
 private:
+  void stop();
   bool transitionRuleExists(const State::Id& state_name, const Event& event);
   void eventHandler();
   void changeState(const Event& event);
