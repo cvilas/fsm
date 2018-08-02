@@ -115,12 +115,13 @@ void Fsm::addTransitionRule(const State::Id& from_state, const Event& event, Tra
 void Fsm::start(const State::Id& state)
 //----------------------------------------------------------------------------------------------------------------------
 {
-  stop();
-
-  if (active_state_ != nullptr)
+  if (isRunning())
   {
-    active_state_->onExit();
+    std::stringstream str;
+    str << "[" << __FUNCTION__ << "] Cannot restart once running";  // NOLINT
+    throw FsmException(str.str());
   }
+
   auto it = states_.find(state);
   if (it == states_.end())
   {
