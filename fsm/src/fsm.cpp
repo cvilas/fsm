@@ -115,6 +115,8 @@ void Fsm::addTransitionRule(const State::Id& from_state, const Event& event, Tra
 void Fsm::start(const State::Id& state)
 //----------------------------------------------------------------------------------------------------------------------
 {
+  stop();
+
   if (active_state_ != nullptr)
   {
     active_state_->onExit();
@@ -128,6 +130,7 @@ void Fsm::start(const State::Id& state)
   }
   active_state_ = it->second;
   active_state_->onEntry();
+
   exit_flag_ = false;
   event_handler_ = std::async(std::launch::async, [this]() { this->eventHandler(); });
 }
