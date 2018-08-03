@@ -67,7 +67,7 @@ protected:
 /// Steps to use the class
 /// - Define and add states (see Fsm::addState)
 /// - Define and add state transition rules (see Fsm::addTransitionRule)
-/// - Initialise with a starting state (see Fsm::initialise)
+/// - Initialise and start (see Fsm::start)
 /// - Raise event to change state (see Fsm::raise)
 class Fsm
 {

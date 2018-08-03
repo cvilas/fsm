@@ -57,7 +57,7 @@ endif(NOT CLANG_FORMAT_FOUND)
 # Documentation target
 #------------------------------------------------------------------------------
 
-set(DOC_PATH ${PROJECT_SOURCE_DIR}/docs/generated)
+set(DOC_PATH ${PROJECT_SOURCE_DIR}/docs/api)
 file(MAKE_DIRECTORY ${DOC_PATH})
 
 find_package(Doxygen QUIET)
@@ -85,7 +85,7 @@ if (DOXYGEN_FOUND)
         COMMENT "Generating API documentation"
         VERBATIM )
 
-    install(DIRECTORY ${DOC_PATH} DESTINATION share/${PROJECT_NAME})
+    install(DIRECTORY ${DOC_PATH} DESTINATION share/${PROJECT_NAME}/docs)
 
 else (DOXYGEN_FOUND)
   message(STATUS "${Yellow}Doxygen not found. No documentation will be built${ColourReset}")
