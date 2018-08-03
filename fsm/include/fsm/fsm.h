@@ -93,8 +93,8 @@ public:
   /// \param from_state The name of state to transition from
   /// \param event The signal that causes the state transition
   /// \param func Function returns ID of resulting state.
-  using TransitionFunc = std::function<State::Id()>;
-  void addTransitionRule(const State::Id& from_state, const Event& event, TransitionFunc&& func);
+  using TransitionFunction = std::function<State::Id()>;
+  void addTransitionRule(const State::Id& from_state, const Event& event, TransitionFunction&& func);
 
   /// Set the initial state and start the state machine
   void start(const State::Id& state);
@@ -122,9 +122,9 @@ private:
   /// Defines an FSM transition from one state to another.
   struct Transition
   {
-    State::Id from_state;  //!< state active at the time of event
-    Event event;           //!< signal that triggers state transition
-    TransitionFunc f;      //!< Functional that returns state to transition into next
+    State::Id from_state;        //!< state active at the time of event
+    Event event;                 //!< signal that triggers state transition
+    TransitionFunction transit;  //!< Functional that returns state to transition into next
   };
 
 private:
@@ -132,9 +132,9 @@ private:
   std::multimap<State::Id, Transition> transitions_;
   std::shared_ptr<State> active_state_;
 
-  mutable std::mutex event_guard_;
+  mutable std::recursive_mutex event_guard_;
   bool exit_flag_;
-  std::condition_variable event_condition_;
+  std::condition_variable_any event_condition_;
   std::queue<Event> event_queue_;
   std::future<void> event_handler_;
 };

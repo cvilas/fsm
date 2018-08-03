@@ -84,7 +84,7 @@ void Fsm::addTransitionRule(const State::Id& from_state, const Event& event, con
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void Fsm::addTransitionRule(const State::Id& from_state, const Event& event, TransitionFunc&& func)
+void Fsm::addTransitionRule(const State::Id& from_state, const Event& event, TransitionFunction&& func)
 //----------------------------------------------------------------------------------------------------------------------
 {
   if (states_.find(from_state) == states_.end())
@@ -108,7 +108,7 @@ void Fsm::addTransitionRule(const State::Id& from_state, const Event& event, Tra
     throw FsmException(str.str());
   }
   transitions_.emplace(
-      std::make_pair(State::Id(from_state), Transition{ from_state, event, std::forward<TransitionFunc>(func) }));
+      std::make_pair(State::Id(from_state), Transition{ from_state, event, std::forward<TransitionFunction>(func) }));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -118,7 +118,7 @@ void Fsm::start(const State::Id& state)
   if (isRunning())
   {
     std::stringstream str;
-    str << "[" << __FUNCTION__ << "] Cannot restart once running";  // NOLINT
+    str << "[" << __FUNCTION__ << "] Re-initialising is forbidden";  // NOLINT
     throw FsmException(str.str());
   }
 
@@ -171,7 +171,7 @@ void Fsm::raise(const Event& event)
     str << "[" << __FUNCTION__ << "] Got event \"" << event << "\" when FSM is not running";  // NOLINT
     throw FsmException(str.str());
   }
-  std::lock_guard<std::mutex> lk(event_guard_);
+  std::lock_guard<std::recursive_mutex> lk(event_guard_);
   event_queue_.push(event);
   event_condition_.notify_one();
 }
@@ -187,7 +187,7 @@ bool Fsm::isRunning() const
 bool Fsm::hasPendingEvents() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-  std::lock_guard<std::mutex> lk(event_guard_);
+  std::lock_guard<std::recursive_mutex> lk(event_guard_);
   return !event_queue_.empty();
 }
 
@@ -195,13 +195,6 @@ bool Fsm::hasPendingEvents() const
 void Fsm::changeState(const Event& event)
 //----------------------------------------------------------------------------------------------------------------------
 {
-  if (active_state_ == nullptr)
-  {
-    std::stringstream str;
-    str << "[" << __FUNCTION__ << "] FSM not initialised";  // NOLINT
-    throw FsmException(str.str());
-  }
-
   const auto all_transitions = transitions_.equal_range(active_state_->getId());
   const auto it = std::find_if(all_transitions.first, all_transitions.second,
                                [&event](const auto& keyval) { return keyval.second.event == event; });
@@ -210,7 +203,7 @@ void Fsm::changeState(const Event& event)
   {
     // exit current state and bring up new state
     active_state_->onExit();
-    active_state_ = states_.at(it->second.f());  /// \todo catch non-existent output state
+    active_state_ = states_.at(it->second.transit());  /// \todo catch non-existent output state
     active_state_->onEntry();
   }
 }
@@ -221,7 +214,7 @@ void Fsm::eventHandler()
 {
   while (true)
   {
-    std::unique_lock<std::mutex> lk(event_guard_);
+    std::unique_lock<std::recursive_mutex> lk(event_guard_);
     event_condition_.wait(lk);
 
     while (!event_queue_.empty())
@@ -229,9 +222,7 @@ void Fsm::eventHandler()
       const auto sig = event_queue_.front();
       event_queue_.pop();
 
-      lk.unlock();
       changeState(sig);
-      lk.lock();
     }
 
     if (exit_flag_)
