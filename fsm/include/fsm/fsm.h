@@ -1,6 +1,5 @@
 //=====================================================================================================================
-// This file is part of project fsm (https://github.com/cvilas/fsm)
-// (C) 2018 Vilas Kumar Chitrakaran
+// This file is part of fsm (https://github.com/cvilas/fsm)
 // Licensed under the MIT License. See LICENSE.md
 //=====================================================================================================================
 
@@ -68,20 +67,12 @@ protected:
 /// Steps to use the class
 /// - Define and add states (see Fsm::addState)
 /// - Define and add state transition rules (see Fsm::addTransitionRule)
-/// - Initialise with a starting state (see Fsm::initialise)
+/// - Initialise and start (see Fsm::start)
 /// - Raise event to change state (see Fsm::raise)
 class Fsm
 {
 public:
   using Event = std::string;
-
-  /// Defines an FSM transition from one state to another.
-  struct Transition
-  {
-    State::Id active_state;  //!< state active at the time of event
-    State::Id next_state;    //!< state to transition into next.
-    Event event;             //!< signal that triggers state transition
-  };
 
 public:
   Fsm();
@@ -96,8 +87,16 @@ public:
   /// \param to_state The name of state to transition to.
   void addTransitionRule(const State::Id& from_state, const Event& event, const State::Id& to_state);
 
+  /// Define state transition rule as a function. Allows implementation of conditional state
+  /// transitions or user-defined processing steps in response to an event.
+  /// \param from_state The name of state to transition from
+  /// \param event The signal that causes the state transition
+  /// \param func Function returns ID of resulting state.
+  using TransitionFunction = std::function<State::Id()>;
+  void addTransitionRule(const State::Id& from_state, const Event& event, TransitionFunction&& func);
+
   /// Set the initial state and start the state machine
-  void initialise(const State::Id& state);
+  void start(const State::Id& state);
 
   /// Raise an event. This will kick of a state transition if one is defined for this event and current state.
   /// The event is quietly ignored otherwise.
@@ -109,19 +108,32 @@ public:
   /// \return A pointer to current state. Use this do perform operations on this state.
   const std::shared_ptr<State>& getActiveState() const;
 
+  /// \return true if the FSM is running
+  bool isRunning() const;
+
 private:
+  void stop();
   bool transitionRuleExists(const State::Id& state_name, const Event& event);
   void eventHandler();
   void changeState(const Event& event);
+
+private:
+  /// Defines an FSM transition from one state to another.
+  struct Transition
+  {
+    State::Id from_state;        //!< state active at the time of event
+    Event event;                 //!< signal that triggers state transition
+    TransitionFunction transit;  //!< Functional that returns state to transition into next
+  };
 
 private:
   std::map<State::Id, std::shared_ptr<State>> states_;
   std::multimap<State::Id, Transition> transitions_;
   std::shared_ptr<State> active_state_;
 
-  mutable std::mutex event_guard_;
+  mutable std::recursive_mutex event_guard_;
   bool exit_flag_;
-  std::condition_variable event_condition_;
+  std::condition_variable_any event_condition_;
   std::queue<Event> event_queue_;
   std::future<void> event_handler_;
 };

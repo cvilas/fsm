@@ -1,6 +1,5 @@
 //=====================================================================================================================
-// This file is part of project fsm (https://github.com/cvilas/fsm)
-// (C) 2018 Vilas Kumar Chitrakaran
+// This file is part of fsm (https://github.com/cvilas/fsm)
 // Licensed under the MIT License. See LICENSE.md
 //=====================================================================================================================
 

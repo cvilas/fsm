@@ -1,6 +1,5 @@
 //=====================================================================================================================
-// This file is part of project fsm (https://github.com/cvilas/fsm)
-// (C) 2018 Vilas Kumar Chitrakaran
+// This file is part of fsm (https://github.com/cvilas/fsm)
 // Licensed under the MIT License. See LICENSE.md
 //=====================================================================================================================
 
@@ -31,7 +30,6 @@ int main(int argc, char** argv)
   try
   {
     MotorController controller;
-    std::cout << "Starting state: " << controller.getActiveState() << "\n" << std::flush;
     std::this_thread::sleep_for(std::chrono::seconds(1));
     controller.trigger("on");
 
