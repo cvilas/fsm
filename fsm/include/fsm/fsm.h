@@ -46,11 +46,11 @@ public:
   Fsm& getFsm();
 
   /// Method gets called on entry into state.
-  /// \note: This method should not block or else state transitions will not occur
+  /// \note This method should not block or else state transitions will not occur
   virtual void onEntry() = 0;
 
   /// Method gets called on exit from state
-  /// \note: This method should not block or else state transitions will not occur
+  /// \note This method should not block or else state transitions will not occur
   virtual void onExit() = 0;
 
 protected:
