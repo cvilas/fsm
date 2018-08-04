@@ -102,7 +102,7 @@ void Fsm::addTransitionRule(const State::Id& from_state, const Event& event, Tra
   if (transitionRuleExists(from_state, event))
   {
     std::stringstream str;
-    str << "[" << __FUNCTION__ << "] Transition rule already exists";  // NOLINT
+    str << "[" << __FUNCTION__ << "] Transition rule already dexists";  // NOLINT
     throw FsmException(str.str());
   }
   transitions_.emplace(
