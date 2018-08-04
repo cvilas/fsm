@@ -102,8 +102,7 @@ void Fsm::addTransitionRule(const State::Id& from_state, const Event& event, Tra
   if (transitionRuleExists(from_state, event))
   {
     std::stringstream str;
-    str << "[" << __FUNCTION__ << "] Transition from \"" << from_state << "\" already exists for \""  // NOLINT
-        << event << "\"";
+    str << "[" << __FUNCTION__ << "] Transition rule already exists";  // NOLINT
     throw FsmException(str.str());
   }
   transitions_.emplace(
@@ -117,7 +116,7 @@ void Fsm::start(const State::Id& state)
   if (isRunning())
   {
     std::stringstream str;
-    str << "[" << __FUNCTION__ << "] Re-initialising is forbidden";  // NOLINT
+    str << "[" << __FUNCTION__ << "] Re-initialisation is forbidden";  // NOLINT
     throw FsmException(str.str());
   }
 
@@ -198,13 +197,22 @@ void Fsm::changeState(const Event& event)
   const auto it = std::find_if(all_transitions.first, all_transitions.second,
                                [&event](const auto& keyval) { return keyval.second.event == event; });
 
-  if (it != all_transitions.second)
+  if (it == all_transitions.second)
   {
-    // exit current state and bring up new state
-    active_state_->onExit();
-    active_state_ = states_.at(it->second.transit());  /// \todo catch non-existent output state
-    active_state_->onEntry();
+    return;
   }
+
+  const auto state_id = it->second.transit();
+  if (states_.end() == states_.find(state_id))
+  {
+    /// \todo throw exception for invalid state and have it caught in the main thread
+    return;
+  }
+
+  // exit current state and bring up new state
+  active_state_->onExit();
+  active_state_ = states_.at(state_id);
+  active_state_->onEntry();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -220,7 +228,6 @@ void Fsm::eventHandler()
     {
       const auto sig = event_queue_.front();
       event_queue_.pop();
-
       changeState(sig);
     }
 
