@@ -222,7 +222,7 @@ void Fsm::eventHandler()
   while (true)
   {
     std::unique_lock<std::recursive_mutex> lk(event_guard_);
-    event_condition_.wait(lk);
+    event_condition_.wait(lk, [this]() { return (!this->event_queue_.empty() || this->exit_flag_); });
 
     while (!event_queue_.empty())
     {
