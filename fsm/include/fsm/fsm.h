@@ -113,7 +113,7 @@ public:
 
 private:
   void stop();
-  bool transitionRuleExists(const State::Id& state_name, const Event& event);
+  bool hasTransitionRule(const State::Id& state_name, const Event& event);
   void eventHandler();
   void changeState(const Event& event);
 

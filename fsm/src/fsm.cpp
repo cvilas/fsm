@@ -62,7 +62,7 @@ void Fsm::addState(std::shared_ptr<State> state)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-bool Fsm::transitionRuleExists(const State::Id& state_name, const Event& event)
+bool Fsm::hasTransitionRule(const State::Id& state_name, const Event& event)
 //----------------------------------------------------------------------------------------------------------------------
 {
   auto tr = transitions_.equal_range(state_name);
@@ -99,10 +99,10 @@ void Fsm::addTransitionRule(const State::Id& from_state, const Event& event, Tra
     str << "[" << __FUNCTION__ << "] State \"" << to_state << "\" does not exit";  // NOLINT
     throw FsmException(str.str());
   }*/
-  if (transitionRuleExists(from_state, event))
+  if (hasTransitionRule(from_state, event))
   {
     std::stringstream str;
-    str << "[" << __FUNCTION__ << "] Transition rule already dexists";  // NOLINT
+    str << "[" << __FUNCTION__ << "] Transition rule already exists";  // NOLINT
     throw FsmException(str.str());
   }
   transitions_.emplace(
