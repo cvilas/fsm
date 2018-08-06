@@ -81,18 +81,21 @@ public:
   /// Add a state in the machine. Also see Fsm::addTransitionRule().
   void addState(std::shared_ptr<State> state);
 
-  /// Define state transition rule. The corresponding states must already exist See Fsm::addState().
+  /// Define state transition rule. The corresponding states must already exist. See Fsm::addState().
   /// \param from_state The name of state to transition from
   /// \param event The signal that causes the state transition
   /// \param to_state The name of state to transition to.
   void addTransitionRule(const State::Id& from_state, const Event& event, const State::Id& to_state);
 
+  /// Signature for state transition function. See addTransitionRule().
+  using TransitionFunction = std::function<State::Id()>;
+
   /// Define state transition rule as a function. Allows implementation of conditional state
-  /// transitions or user-defined processing steps in response to an event.
+  /// transitions or user-defined processing steps in response to an event. The corresponding states
+  /// must already exist. See Fsm::addState().
   /// \param from_state The name of state to transition from
   /// \param event The signal that causes the state transition
   /// \param func Function returns ID of resulting state.
-  using TransitionFunction = std::function<State::Id()>;
   void addTransitionRule(const State::Id& from_state, const Event& event, TransitionFunction&& func);
 
   /// Set the initial state and start the state machine
